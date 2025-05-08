@@ -55,16 +55,6 @@
                 const availableQualities = hls.levels.map(level => level.height);
                 const defaultQuality = availableQualities[0];
 
-                const player = new Plyr(video, {
-                    controls: ['play-large', 'play', 'mute', 'volume', 'settings', 'fullscreen'],
-                    quality: {
-                        default: defaultQuality,
-                        options: availableQualities,
-                        forced: true,
-                        onChange: (quality) => {
-                            hls.levels.forEach((level, levelIndex) => {
-                                if (level.height === quality) {
-                                    hls.currentLevel = levelIndex;
                                 }
                             });
                         }
