@@ -1,0 +1,84 @@
+</style>
+</head>
+
+<body>
+    <video id="player" autoplay muted controls crossorigin playsinline></video>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.4/dist/hls.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/plyr@3.6.12/dist/plyr.min.js"></script>
+
+    <!-- ✅ Updated Script with URL param support -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const video = document.getElementById('player');
+
+            // Fetch `url` parameter from the query string
+            const urlParams = new URLSearchParams(window.location.search);
+            const source = urlParams.get('url');
+
+            if (!source) {
+                document.body.innerHTML = '<p>Error: No stream URL provided in the query (?url=...)</p>';
+                return;
+            }
+
+            if (Hls.isSupported()) {
+                const hls = new Hls({
+                    maxMaxBufferLength: 100
+                });
+                hls.loadSource(source);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    const availableQualities = hls.levels.map(level => level.height);
+                    const defaultQuality = availableQualities[0];
+
+                    const player = new Plyr(video, {
+                        controls: ['play-large', 'play', 'mute', 'volume', 'settings', 'fullscreen'],
+                        quality: {
+                            default: defaultQuality,
+                            options: availableQualities,
+                            forced: true,
+                            onChange: (quality) => {
+                                hls.levels.forEach((level, levelIndex) => {
+                                    if (level.height === quality) {
+                                        hls.currentLevel = levelIndex;
+                                    }
+                                });
+                            }
+                        }
+                    });
+
+                    document.addEventListener('fullscreenchange', () => {
+                        if (document.fullscreenElement) {
+                            if (screen.orientation && screen.orientation.lock) {
+                                screen.orientation.lock('landscape').catch(err => {
+                                    console.error('Error locking orientation:', err);
+                                });
+                            }
+                        } else {
+                            if (screen.orientation && screen.orientation.unlock) {
+                                screen.orientation.unlock().catch(err => {
+                                    console.error('Error unlocking orientation:', err);
+                                });
+                            }
+                        }
+                    });
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = source;
+                new Plyr(video);
+            } else {
+                document.body.innerHTML = '<p>Your browser does not support HLS playback.</p>';
+            }
+        });
+
+        window.addEventListener("load", function () {
+            if (window.confirm("Join @CricGOLive for more updates?")) {
+                window.location.href = "https://t.me/CricGOLive";
+            }
+        });
+    </script>
+
+    <!-- ✅ Cloudflare beacon script remains unchanged -->
+    <script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"93c5e1385a359c5f","version":"2025.4.0-1-g37f21b1","r":1,"token":"443afb7c1f6846a398db1db4a6718dae","serverTiming":{"name":{"cfExtPri":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}}}' crossorigin="anonymous"></script>
+</body>
+</html>
